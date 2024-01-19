@@ -10,10 +10,11 @@ import {
   Image,
   ImageBackgroundBase,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { XMarkIcon } from "react-native-heroicons/outline";
 import { useNavigation } from "@react-navigation/native";
 import Loading from "../components/loading";
+import { searchMovies } from "../api/moviedb";
 
 var { width, height } = Dimensions.get("window");
 export default function SearchScreen() {
@@ -21,10 +22,30 @@ export default function SearchScreen() {
   const [results, setResults] = useState([1, 2, 3, 4]);
   const [loading, setLoading] = useState(false);
   let movieName = "Ant-Man and the wasp: Quantumania";
+  const handleSearch = (value) => {
+    if (value && value.length > 2) {
+      setLoading(true);
+      searchMovies({
+        query: value,
+        include_adult: "false",
+        language: "en-US",
+        page: "1",
+      }).then((data) => {
+        setLoading(false);
+        console.log("got movie: ", data);
+      });
+    } else {
+      setLoading(false);
+      setResults([]);
+    }
+  };
+
+  const handleTextBebounce = useCallback(debounce(handleSearch, 400), []);
   return (
     <SafeAreaView className="bg-neutral-800 flex-1">
       <View className="mx-4 mb-3 flex-row justify-between items-center border border-neutral-500 rounded-full">
         <TextInput
+          onChangeText={handleTextBebounce}
           placeholder="Search Movie"
           placeholderTextColor={"lightgray"}
           className="p-3 pb-1 pl-6 flex-1 text-base font-semibold text-white tracking-wider"
